@@ -1,10 +1,21 @@
-import * as functions from "firebase-functions";
-import scrapeWabPage from "./Controllers";
+import * as functions from "firebase-functions"
+import { scrapeWabPage, scrapeNews } from "./Controllers"
+import * as express from "express"
+import * as bodyParser from "body-parser"
+const app = express()
+app.use(bodyParser.json({ type: "application/json" }))
 
-exports.scrapeNews = functions.runWith({
-  timeoutSeconds: 240,
-  memory: "256MB"||'1GB',
-}).region("us-east1").https.onRequest(async(req,res)=>{
+app.get("/news", async (req, res) => {
   const stories = await scrapeWabPage()
-  res.type("html").send(stories.join("<br>"))
+  console.log(stories)
+  const indianExpressNews = await scrapeNews()
+
+  res.json({ "India today": stories, "Indian Express": indianExpressNews })
 })
+exports.api = functions
+  .runWith({
+    timeoutSeconds: 300,
+    memory: "256MB" || "2GB",
+  })
+  .region("us-east1")
+  .https.onRequest(app)
